@@ -385,7 +385,7 @@ input[type=text]:focus { border-color: var(--gold); }
     <p style="font-size:.78rem;color:rgba(255,255,255,.3);line-height:1.7;text-align:center">
       <strong style="color:var(--gold-light)">How to play:</strong> Bid exactly how many tricks you'll win each round.
       Hit your bid → 10 + bid points. Miss → 1 point per trick only.
-      Rounds go 1 card up to the max then back down. Trump beats all.
+      Rounds go 1 card up to the max then back down. Obama suit beats all.
     </p>
   </div>
 </div>
@@ -431,7 +431,7 @@ input[type=text]:focus { border-color: var(--gold); }
       <span>·</span>
       <span id="g-cards-label">1 card</span>
       <span>·</span>
-      <span>Trump: <span id="g-trump" class="trump-badge">?</span></span>
+      <span>Obama suit: <span id="g-trump" class="trump-badge">?</span></span>
     </div>
   </div>
 
@@ -590,10 +590,10 @@ function trickWinner(trick, trump, ledSuit) {
 }
 
 function getRoundSchedule(numPlayers) {
-  const max = Math.floor(52/numPlayers);
-  const up=[]; for(let i=1;i<=max;i++) up.push(i);
-  const dn=[]; for(let i=max-1;i>=1;i--) dn.push(i);
-  return [...up,...dn];
+  const max = Math.min(10, Math.floor(52/numPlayers));
+  const dn=[]; for(let i=max;i>=1;i--) dn.push(i);
+  const up=[]; for(let i=2;i<=max;i++) up.push(i);
+  return [...dn,...up];
 }
 
 // ── encode/decode hands (Firebase key-safe, Unicode-safe) ──
