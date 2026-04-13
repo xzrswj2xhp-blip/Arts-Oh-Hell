@@ -932,9 +932,14 @@ function renderGame() {
       actionText.innerHTML = `Waiting for <strong>${gs.playerNames[player]||'...'}</strong> to play…`;
     }
   } else if (rs.phase === 'roundEnd') {
-    showRoundModal();
+    // Only open if not already open
+    if (!document.getElementById('modal-round').classList.contains('show')) {
+      showRoundModal();
+    }
   } else if (rs.phase === 'gameOver') {
-    showFinalModal();
+    if (!document.getElementById('modal-final').classList.contains('show')) {
+      showFinalModal();
+    }
   }
 }
 
@@ -1084,44 +1089,44 @@ window.showRoundModal = function() {
 
   const isLast = gs.roundIdx >= gs.schedule.length - 1;
   const nextBtn = document.getElementById('mr-next-btn');
-  nextBtn.textContent = isLast ? 'Final Scores' : 'Next Round';
-  nextBtn.style.display = IS_HOST ? 'block' : 'none';
-  if (!IS_HOST) {
-    const note = document.createElement('p');
-    note.style.cssText = 'text-align:center;font-size:.78rem;color:rgba(255,255,255,.35);margin-top:.5rem';
-    note.textContent = 'Waiting for host to continue…';
-    nextBtn.parentNode.appendChild(note);
-  }
+  nextBtn.textContent = isLast ? 'See Final Scores' : 'Next Round';
+  nextBtn.style.display = 'block';
   document.getElementById('modal-round').classList.add('show');
 };
 
 window.hostNextRound = async function() {
-  if (!IS_HOST) return;
   document.getElementById('modal-round').classList.remove('show');
 
-  const rs = gs.roundState;
-  const isLast = gs.roundIdx >= gs.schedule.length - 1;
+  // Re-read from Firebase to get latest state and avoid race conditions
+  const freshGs = await dbGet(`rooms/${ROOM_CODE}/gameState`);
+  if (!freshGs) return;
+  // Normalise arrays (Firebase converts them to objects)
+  if (freshGs.players && !Array.isArray(freshGs.players)) freshGs.players = Object.values(freshGs.players);
+  if (freshGs.schedule && !Array.isArray(freshGs.schedule)) freshGs.schedule = Object.values(freshGs.schedule);
+  const rs = freshGs.roundState;
 
-  // apply scores from roundEnd state
-  const updatedScores = rs._scores || gs.scores;
+  // If another player already advanced, bail out
+  if (rs.phase !== 'roundEnd') return;
+
+  const isLast = freshGs.roundIdx >= freshGs.schedule.length - 1;
+  const updatedScores = rs._scores || freshGs.scores;
 
   if (isLast) {
-    const finalGs = { ...gs, scores: updatedScores, roundState: { ...gs.roundState, phase: 'gameOver' } };
+    const finalGs = { ...freshGs, scores: updatedScores, roundState: { ...rs, phase: 'gameOver' } };
     await dbSet(`rooms/${ROOM_CODE}/gameState`, finalGs);
     return;
   }
 
-  const newRoundIdx = gs.roundIdx + 1;
-  const newDealerIdx = (gs.dealerIdx + 1) % gs.players.length;
+  const newRoundIdx = freshGs.roundIdx + 1;
+  const newDealerIdx = (freshGs.dealerIdx + 1) % freshGs.players.length;
   const newGs = {
-    ...gs,
+    ...freshGs,
     scores: updatedScores,
     roundIdx: newRoundIdx,
     dealerIdx: newDealerIdx,
   };
   const newRs = buildRoundState(newGs);
   newGs.roundState = newRs;
-  // Use set() for roundState — update() flattens nested objects and corrupts them
   await dbSet(`rooms/${ROOM_CODE}/gameState`, newGs);
 };
 
