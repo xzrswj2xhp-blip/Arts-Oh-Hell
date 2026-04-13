@@ -385,8 +385,7 @@ input[type=text]:focus { border-color: var(--gold); }
     <p style="font-size:.78rem;color:rgba(255,255,255,.3);line-height:1.7;text-align:center">
       <strong style="color:var(--gold-light)">How to play:</strong> Bid exactly how many tricks you'll win each round.
       Hit your bid → 10 + bid points. Miss → 1 point per trick only.
-      Rounds go 1 card up to the max then back down.
-      Trump beats all. Last bidder can't set the perfect total!
+      Rounds go 1 card up to the max then back down. Trump beats all.
     </p>
   </div>
 </div>
@@ -739,7 +738,8 @@ window.startGame = async function() {
   const rs = buildRoundState(initGs);
   initGs.roundState = rs;
 
-  await dbUpdate(`rooms/${ROOM_CODE}`, { phase: 'playing', gameState: initGs });
+  await dbSet(`rooms/${ROOM_CODE}/gameState`, initGs);
+  await dbUpdate(`rooms/${ROOM_CODE}`, { phase: 'playing' });
 };
 
 // ── BUILD ROUND STATE ──
@@ -935,14 +935,10 @@ window.changeBid = function(d) {
 window.submitBid = async function() {
   const rs = gs.roundState;
   const bid = currentBid || 0;
-  // Dealer constraint
-  if (rs.bidIdx === rs.bidOrder.length - 1) {
-    const sumSoFar = Object.values(rs.bids).reduce((a,b) => a + (b||0), 0);
-    if (bid === rs.numCards - sumSoFar) { toast(`Can't bid ${bid} — that would let everyone make their bid!`); return; }
-  }
   const newBids = { ...rs.bids, [MY_ID]: bid };
   const newRs   = advanceBidState({ ...rs, bids: newBids });
-  await dbUpdate(`rooms/${ROOM_CODE}/gameState`, { 'roundState': newRs });
+  // Use set() — update() with nested objects flattens and corrupts them
+  await dbSet(`rooms/${ROOM_CODE}/gameState`, { ...gs, roundState: newRs });
   currentBid = 0;
 };
 
@@ -987,7 +983,8 @@ window.playSelected = async function() {
     newRs = await resolveTrick(newRs);
   }
 
-  await dbUpdate(`rooms/${ROOM_CODE}/gameState`, { roundState: newRs });
+  // Use set() — update() with nested objects flattens and corrupts them
+  await dbSet(`rooms/${ROOM_CODE}/gameState`, { ...gs, roundState: newRs });
 };
 
 async function resolveTrick(rs) {
@@ -1083,10 +1080,8 @@ window.hostNextRound = async function() {
   const updatedScores = rs._scores || gs.scores;
 
   if (isLast) {
-    await dbUpdate(`rooms/${ROOM_CODE}/gameState`, {
-      scores: updatedScores,
-      'roundState/phase': 'gameOver',
-    });
+    const finalGs = { ...gs, scores: updatedScores, roundState: { ...gs.roundState, phase: 'gameOver' } };
+    await dbSet(`rooms/${ROOM_CODE}/gameState`, finalGs);
     return;
   }
 
@@ -1099,12 +1094,9 @@ window.hostNextRound = async function() {
     dealerIdx: newDealerIdx,
   };
   const newRs = buildRoundState(newGs);
-  await dbUpdate(`rooms/${ROOM_CODE}/gameState`, {
-    scores: updatedScores,
-    roundIdx: newRoundIdx,
-    dealerIdx: newDealerIdx,
-    roundState: newRs,
-  });
+  newGs.roundState = newRs;
+  // Use set() for roundState — update() flattens nested objects and corrupts them
+  await dbSet(`rooms/${ROOM_CODE}/gameState`, newGs);
 };
 
 // ── FINAL ──
