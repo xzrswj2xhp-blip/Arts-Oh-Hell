@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oh Hell!</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --felt: #1a4a2e;
+    --felt-light: #235c39;
+    --felt-dark: #112e1d;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --ivory: #f5f0e8;
+    --ivory-dark: #e8e0d0;
+    --red-card: #c0392b;
+    --black-card: #1a1a1a;
+    --card-bg: #fefefe;
+    --card-border: #d4c9b0;
+    --shadow: rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--felt-dark);
+    color: var(--ivory);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+  /* ===== LOBBY ===== */
+  #lobby {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background: radial-gradient(ellipse at center, #1a4a2e 0%, #0a1f13 100%);
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 3px 3px 0 #7a5e1a, 6px 6px 20px rgba(0,0,0,0.6);
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  .logo-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 300;
+    letter-spacing: 4px;
+    color: var(--gold-light);
+    opacity: 0.7;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+  }
+
+  .lobby-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 480px;
+    backdrop-filter: blur(10px);
+  }
+
+  .lobby-card h2 {
+    font-size: 1.4rem;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 8px;
+    color: var(--ivory);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--gold);
+  }
+
+  .btn {
+    width: 100%;
+    padding: 0.875rem;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), #a8822a);
+    color: #1a1a00;
+  }
+
+  .btn-gold:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-gold:active { transform: translateY(0); }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid rgba(201,168,76,0.5);
+    color: var(--gold-light);
+    margin-top: 0.75rem;
+  }
+
+  .btn-outline:hover {
+    background: rgba(201,168,76,0.1);
+    border-color: var(--gold);
+  }
+
+  .divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+    color: rgba(201,168,76,0.4);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 35%;
+    height: 1px;
+    background: rgba(201,168,76,0.2);
+  }
+
+  .divider::before { left: 0; }
+  .divider::after { right: 0; }
+
+  /* ===== WAITING ROOM ===== */
+  #waiting-room {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background: radial-gradient(ellipse at center, #1a4a2e 0%, #0a1f13 100%);
+  }
+
+  .room-code-box {
+    background: rgba(0,0,0,0.4);
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    max-width: 480px;
+    width: 100%;
+  }
+
+  .room-code-label {
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    opacity: 0.7;
+    margin-bottom: 0.5rem;
+  }
+
+  .room-code {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 8px;
+  }
+
+  .share-link {
+    font-size: 0.8rem;
+    color: rgba(245,240,232,0.5);
+    margin-top: 0.75rem;
+    word-break: break-all;
+    cursor: pointer;
+  }
+
+  .share-link:hover { color: var(--gold-light); }
+
+  .players-list {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    max-width: 480px;
+    width: 100%;
+    margin-bottom: 1.5rem;
+  }
+
+  .players-list h3 {
+    color: var(--gold);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .player-row:last-child { border-bottom: none; }
+
+  .player-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--felt-light);
+    border: 2px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .player-name-text { flex: 1; font-size: 0.95rem; }
+
+  .badge {
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .badge-host { background: rgba(201,168,76,0.2); color: var(--gold); border: 1px solid rgba(201,168,76,0.4); }
+  .badge-ready { background: rgba(46,160,67,0.2); color: #56d364; border: 1px solid rgba(46,160,67,0.3); }
+  .badge-waiting { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.1); }
+
+  .empty-slot {
+    opacity: 0.3;
+    font-style: italic;
+    font-size: 0.85rem;
+  }
+
+  /* ===== GAME TABLE ===== */
+  #game-table {
+    display: none;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--felt);
+    background-image:
+      radial-gradient(ellipse at 50% 40%, rgba(35,92,57,0.8) 0%, transparent 70%),
+      repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,0,0,0.02) 35px, rgba(0,0,0,0.02) 70px);
+  }
+
+  /* Score header */
+  .score-bar {
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    overflow-x: auto;
+  }
+
+  .score-bar-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--gold);
+    white-space: nowrap;
+    margin-right: 0.5rem;
+  }
+
+  .score-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 4px 12px;
+    min-width: 70px;
+    white-space: nowrap;
+  }
+
+  .score-pill.active-turn { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+  .score-pill-name { font-size: 0.7rem; color: rgba(255,255,255,0.6); }
+  .score-pill-score { font-size: 1.1rem; font-weight: 500; color: var(--ivory); }
+  .score-pill-bid { font-size: 0.65rem; color: var(--gold-light); }
+
+  /* Round info */
+  .round-info {
+    text-align: center;
+    padding: 0.75rem;
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .round-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .trump-suit {
+    font-size: 1.2rem;
+    filter: drop-shadow(0 0 4px rgba(201,168,76,0.6));
+  }
+
+  /* Center play area */
+  .play-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    gap: 1rem;
+    position: relative;
+  }
+
+  .opponents-area {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .opponent-hand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .opponent-name-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 1px;
+  }
+
+  .opponent-cards {
+    display: flex;
+    gap: -4px;
+  }
+
+  .card-back {
+    width: 28px;
+    height: 42px;
+    background: #1e3a8a;
+    border: 1px solid #93c5fd;
+    border-radius: 4px;
+    margin-left: -8px;
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) 2px, transparent 0, transparent 50%);
+    background-size: 6px 6px;
+  }
+
+  .card-back:first-child { margin-left: 0; }
+
+  /* Trick area */
+  .trick-area {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 50%;
+    width: 220px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 12px;
+    position: relative;
+  }
+
+  .trick-label {
+    position: absolute;
+    top: -22px;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Playing card */
+  .card {
+    width: 52px;
+    height: 76px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4px 5px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    user-select: none;
+    box-shadow: 1px 2px 6px rgba(0,0,0,0.4);
+  }
+
+  .card.red { color: var(--red-card); }
+  .card.black { color: var(--black-card); }
+
+  .card:hover { transform: translateY(-8px); box-shadow: 2px 8px 16px rgba(0,0,0,0.5); }
+
+  .card.selected {
+    transform: translateY(-14px);
+    box-shadow: 0 0 0 2px var(--gold), 2px 10px 20px rgba(0,0,0,0.5);
+  }
+
+  .card.unplayable { opacity: 0.4; cursor: not-allowed; }
+  .card.unplayable:hover { transform: none; }
+
+  .card-corner { font-size: 0.65rem; font-weight: 700; line-height: 1; }
+  .card-corner-top { align-self: flex-start; }
+  .card-corner-bottom { align-self: flex-end; transform: rotate(180deg); }
+
+  .card-center {
+    font-size: 1.5rem;
+    text-align: center;
+    line-height: 1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .card-in-trick {
+    width: 44px;
+    height: 64px;
+    font-size: 0.55rem;
+    cursor: default;
+  }
+
+  .card-in-trick:hover { transform: none; }
+  .card-in-trick .card-center { font-size: 1.2rem; }
+
+  /* Player hand */
+  .player-section {
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .player-info-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding: 0 0.25rem;
+  }
+
+  .player-info-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ivory);
+  }
+
+  .player-info-score { font-size: 0.8rem; color: var(--gold-light); }
+
+  .hand-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    padding: 0.5rem 0;
+  }
+
+  /* Action panel */
+  .action-panel {
+    background: rgba(0,0,0,0.3);
+    border-top: 1px solid rgba(201,168,76,0.2);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .action-msg {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
+    text-align: center;
+  }
+
+  .action-msg strong { color: var(--gold); }
+
+  .bid-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .bid-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.5);
+    background: rgba(201,168,76,0.1);
+    color: var(--gold);
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bid-btn:hover { background: rgba(201,168,76,0.25); }
+
+  .bid-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--gold);
+    min-width: 2.5rem;
+    text-align: center;
+  }
+
+  .btn-confirm {
+    padding: 0.6rem 2rem;
+    background: var(--gold);
+    color: #1a1000;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-confirm:hover { filter: brightness(1.1); }
+
+  .btn-small {
+    padding: 0.5rem 1.25rem;
+    background: rgba(201,168,76,0.15);
+    color: var(--gold-light);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-small:hover { background: rgba(201,168,76,0.25); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(0,0,0,0.85);
+    border: 1px solid var(--gold);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    color: var(--ivory);
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    text-align: center;
+    max-width: 350px;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Result modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal-box {
+    background: var(--felt-dark);
+    border: 2px solid var(--gold);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 480px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .modal-box h2 {
+    color: var(--gold);
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+  }
+
+  .results-table th {
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    opacity: 0.7;
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    text-align: left;
+  }
+
+  .results-table td {
+    padding: 8px 8px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .results-table .winner-row td { color: var(--gold); font-weight: 500; }
+
+  /* Trick won overlay */
+  .trick-won {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--gold);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .trick-won.show { opacity: 1; }
+
+  .instruction-box {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    max-width: 480px;
+    margin: 0 auto;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+
+  .instruction-box strong { color: var(--gold-light); }
+
+  @media (max-width: 500px) {
+    .card { width: 44px; height: 64px; }
+    .card-center { font-size: 1.2rem; }
+    .trick-area { width: 180px; height: 130px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== LOBBY ===== -->
+<div id="lobby">
+  <div class="logo">Oh Hell!</div>
+  <div class="logo-sub">The classic bidding card game</div>
+
+  <div class="lobby-card">
+    <h2>Host a Game</h2>
+    <div class="form-group">
+      <label>Your Name</label>
+      <input type="text" id="host-name" placeholder="Enter your name" maxlength="20">
+    </div>
+    <button class="btn btn-gold" onclick="hostGame()">Create Room</button>
+
+    <div class="divider">or join</div>
+
+    <div class="form-group">
+      <label>Your Name</label>
+      <input type="text" id="join-name" placeholder="Enter your name" maxlength="20">
+    </div>
+    <div class="form-group">
+      <label>Room Code</label>
+      <input type="text" id="join-code" placeholder="e.g. OHLL" maxlength="6" style="text-transform:uppercase; letter-spacing: 4px; font-size: 1.2rem; text-align:center;">
+    </div>
+    <button class="btn btn-outline" onclick="joinGame()">Join Room</button>
+  </div>
+
+  <div style="margin-top: 2rem; max-width: 480px; width: 100%;">
+    <div class="instruction-box">
+      <strong>How to Play:</strong> Each round, players are dealt a hand of cards (starting with 1 card, going up, then back down). Before play, everyone bids how many tricks they think they'll win. Score 10 + bid if exact, or 1 per trick if not. Trumps beat all other suits. No helping the dealer make the total add up!
+    </div>
+  </div>
+</div>
+
+<!-- ===== WAITING ROOM ===== -->
+<div id="waiting-room">
+  <div class="logo" style="font-size: 2.5rem; margin-bottom: 0.25rem;">Oh Hell!</div>
+  <div class="logo-sub" style="margin-bottom: 1.5rem;">Waiting for players</div>
+
+  <div class="room-code-box">
+    <div class="room-code-label">Room Code</div>
+    <div class="room-code" id="display-code">----</div>
+    <div class="share-link" id="share-link" onclick="copyLink()">Click to copy invite link</div>
+  </div>
+
+  <div class="players-list">
+    <h3 id="waiting-header">Players (1/6)</h3>
+    <div id="waiting-players"></div>
+  </div>
+
+  <div style="max-width: 480px; width: 100%;">
+    <button class="btn btn-gold" id="start-btn" onclick="startGame()" style="display:none">Start Game</button>
+    <button class="btn btn-outline" id="ready-btn" onclick="toggleReady()">Ready</button>
+    <p style="text-align:center; font-size:0.8rem; color: rgba(255,255,255,0.3); margin-top: 1rem;" id="wait-msg">Waiting for host to start the game...</p>
+  </div>
+</div>
+
+<!-- ===== GAME TABLE ===== -->
+<div id="game-table">
+  <!-- Score bar -->
+  <div class="score-bar">
+    <div class="score-bar-title">Oh Hell!</div>
+    <div id="score-pills" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    <div style="margin-left:auto; display:flex; gap:8px;">
+      <button class="btn-small" onclick="showScores()">Scores</button>
+    </div>
+  </div>
+
+  <!-- Round info -->
+  <div class="round-info">
+    <div class="round-badge">
+      <span id="round-label">Round 1 of 13</span>
+      <span>&bull;</span>
+      <span id="cards-label">1 card</span>
+      <span>&bull;</span>
+      <span>Trump: <span id="trump-display" class="trump-suit">?</span></span>
+    </div>
+  </div>
+
+  <!-- Play area -->
+  <div class="play-area">
+    <div class="opponents-area" id="opponents-area"></div>
+
+    <div style="position:relative;">
+      <div class="trick-area" id="trick-area">
+        <div class="trick-label">Current Trick</div>
+        <div class="trick-won" id="trick-won-msg"></div>
+      </div>
+    </div>
+
+    <div class="player-section">
+      <div class="player-info-bar">
+        <span class="player-info-name" id="my-name-label">You</span>
+        <span class="player-info-score" id="my-score-label">Score: 0</span>
+      </div>
+      <div class="hand-cards" id="my-hand"></div>
+    </div>
+  </div>
+
+  <!-- Action panel -->
+  <div class="action-panel">
+    <div class="action-msg" id="action-msg">Waiting...</div>
+    <div id="bid-ui" style="display:none; flex-direction:column; align-items:center; gap:0.75rem;">
+      <div class="bid-controls">
+        <button class="bid-btn" onclick="changeBid(-1)">−</button>
+        <div class="bid-number" id="bid-display">0</div>
+        <button class="bid-btn" onclick="changeBid(1)">+</button>
+      </div>
+      <button class="btn-confirm" onclick="submitBid()">Confirm Bid</button>
+    </div>
+    <div id="play-hint" style="display:none;">
+      <button class="btn-confirm" onclick="playSelectedCard()">Play Card</button>
+    </div>
+  </div>
+</div>
+
+<!-- Trick result modal -->
+<div class="modal-overlay" id="round-result-modal">
+  <div class="modal-box">
+    <h2 id="modal-title">Round Over</h2>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Bid</th>
+          <th>Won</th>
+          <th>Round</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="round-results-body"></tbody>
+    </table>
+    <button class="btn-confirm" style="width:100%" id="modal-next-btn" onclick="nextRound()">Next Round</button>
+  </div>
+</div>
+
+<!-- Final scores modal -->
+<div class="modal-overlay" id="final-modal">
+  <div class="modal-box">
+    <h2>Game Over!</h2>
+    <table class="results-table">
+      <thead>
+        <tr><th>Place</th><th>Player</th><th>Total Score</th></tr>
+      </thead>
+      <tbody id="final-results-body"></tbody>
+    </table>
+    <button class="btn-confirm" style="width:100%" onclick="location.reload()">New Game</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== CORE GAME STATE =====
+const SUITS = ['♠','♥','♦','♣'];
+const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const RANK_VAL = {};
+RANKS.forEach((r,i) => RANK_VAL[r] = i);
+
+let G = {
+  roomCode: null,
+  myId: null,
+  myName: null,
+  isHost: false,
+  players: [], // {id, name, ready}
+  phase: 'lobby', // lobby | waiting | bidding | playing | roundEnd | gameOver
+  round: 0,
+  maxRound: 0,
+  cardsThisRound: 0,
+  trumpSuit: null,
+  trumpCard: null,
+  deck: [],
+  hands: {},
+  bids: {},
+  tricks: {},
+  tricksTaken: {},
+  scores: {},
+  currentTrick: [],
+  ledSuit: null,
+  trickWinner: null,
+  currentPlayerIdx: 0,
+  dealerIdx: 0,
+  bidOrder: [],
+  bidIdx: 0,
+  playOrder: [],
+  playIdx: 0,
+  selectedCard: null,
+  // For local single-device multiplayer (no server):
+  allHands: {},
+};
+
+// ===== STORAGE (local multiplayer) =====
+// Since we don't have a server, we simulate multiplayer by storing
+// state in localStorage and having players share a device OR use
+// the shareable link which encodes the room state.
+
+let roomPollInterval = null;
+
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function genId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+// Save room to localStorage
+function saveRoom(room) {
+  localStorage.setItem('ohHell_room_' + room.code, JSON.stringify(room));
+}
+
+function loadRoom(code) {
+  const raw = localStorage.getItem('ohHell_room_' + code);
+  return raw ? JSON.parse(raw) : null;
+}
+
+function myTabId() {
+  if (!sessionStorage.getItem('ohHellTabId')) {
+    sessionStorage.setItem('ohHellTabId', genId());
+  }
+  return sessionStorage.getItem('ohHellTabId');
+}
+
+// ===== DECK =====
+function makeDeck() {
+  const deck = [];
+  for (const suit of SUITS) for (const rank of RANKS) deck.push({rank, suit});
+  return deck;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function cardId(c) { return c.rank + c.suit; }
+
+function isRed(c) { return c.suit === '♥' || c.suit === '♦'; }
+
+// ===== ROUND SCHEDULE =====
+function getRoundSchedule(numPlayers) {
+  const maxCards = Math.floor(52 / numPlayers);
+  const up = [];
+  for (let i = 1; i <= maxCards; i++) up.push(i);
+  const down = [];
+  for (let i = maxCards - 1; i >= 1; i--) down.push(i);
+  return [...up, ...down];
+}
+
+// ===== TRICK WINNER =====
+function trickWinner(trick, trump, ledSuit) {
+  let winner = trick[0];
+  for (let i = 1; i < trick.length; i++) {
+    const c = trick[i];
+    const w = winner.card;
+    const cur = c.card;
+    if (cur.suit === trump && w.suit !== trump) { winner = c; continue; }
+    if (cur.suit === w.suit && RANK_VAL[cur.rank] > RANK_VAL[w.rank]) { winner = c; }
+  }
+  return winner.playerId;
+}
+
+// ===== UI HELPERS =====
+function show(id) { document.getElementById(id).style.display = 'flex'; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+function hideEl(id) { document.getElementById(id).style.display = 'none'; }
+function showEl(id, d='block') { document.getElementById(id).style.display = d; }
+
+function toast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function cardHTML(card, classes = '') {
+  const color = isRed(card) ? 'red' : 'black';
+  return `<div class="card ${color} ${classes}" data-card="${cardId(card)}" onclick="selectCard(this,'${cardId(card)}')">
+    <div class="card-corner card-corner-top">${card.rank}<br>${card.suit}</div>
+    <div class="card-center">${card.suit}</div>
+    <div class="card-corner card-corner-bottom">${card.rank}<br>${card.suit}</div>
+  </div>`;
+}
+
+function cardInTrickHTML(card, playerName) {
+  const color = isRed(card) ? 'red' : 'black';
+  return `<div class="card card-in-trick ${color}" title="${playerName}">
+    <div class="card-corner card-corner-top" style="font-size:0.5rem">${card.rank}<br>${card.suit}</div>
+    <div class="card-center">${card.suit}</div>
+    <div class="card-corner card-corner-bottom" style="font-size:0.5rem">${card.rank}<br>${card.suit}</div>
+  </div>`;
+}
+
+function suitColor(suit) {
+  return (suit === '♥' || suit === '♦') ? '#c0392b' : '#fff';
+}
+
+// ===== LOBBY =====
+function hostGame() {
+  const name = document.getElementById('host-name').value.trim();
+  if (!name) { toast('Enter your name first!'); return; }
+
+  const code = genCode();
+  const id = myTabId();
+  G.myId = id;
+  G.myName = name;
+  G.isHost = true;
+  G.roomCode = code;
+
+  const room = {
+    code,
+    host: id,
+    players: [{id, name, ready: false}],
+    phase: 'waiting',
+    gameState: null,
+  };
+  saveRoom(room);
+
+  hideEl('lobby');
+  showEl('waiting-room', 'flex');
+  renderWaitingRoom(room);
+  startPolling();
+}
+
+function joinGame() {
+  const name = document.getElementById('join-name').value.trim();
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (!name) { toast('Enter your name first!'); return; }
+  if (!code) { toast('Enter a room code!'); return; }
+
+  const room = loadRoom(code);
+  if (!room) { toast('Room not found. Check the code!'); return; }
+  if (room.phase !== 'waiting') { toast('Game already in progress!'); return; }
+  if (room.players.length >= 6) { toast('Room is full (max 6)!'); return; }
+
+  const id = myTabId();
+  // Check if already in room
+  const existing = room.players.find(p => p.id === id);
+  if (!existing) {
+    room.players.push({id, name, ready: false});
+    saveRoom(room);
+  }
+
+  G.myId = id;
+  G.myName = name;
+  G.isHost = false;
+  G.roomCode = code;
+
+  hideEl('lobby');
+  showEl('waiting-room', 'flex');
+  renderWaitingRoom(room);
+  startPolling();
+}
+
+function renderWaitingRoom(room) {
+  document.getElementById('display-code').textContent = room.code;
+  const link = window.location.href.split('?')[0] + '?room=' + room.code;
+  document.getElementById('share-link').textContent = link;
+
+  const n = room.players.length;
+  document.getElementById('waiting-header').textContent = `Players (${n}/6)`;
+
+  const container = document.getElementById('waiting-players');
+  container.innerHTML = '';
+
+  for (let i = 0; i < 6; i++) {
+    const p = room.players[i];
+    if (p) {
+      const isHost = p.id === room.host;
+      const isMe = p.id === G.myId;
+      const badgeText = isHost ? 'host' : (p.ready ? 'ready' : 'waiting');
+      const badgeClass = isHost ? 'badge-host' : (p.ready ? 'badge-ready' : 'badge-waiting');
+      container.innerHTML += `<div class="player-row">
+        <div class="player-avatar">${p.name[0].toUpperCase()}</div>
+        <div class="player-name-text">${p.name}${isMe ? ' (you)' : ''}</div>
+        <span class="badge ${badgeClass}">${badgeText}</span>
+      </div>`;
+    } else {
+      container.innerHTML += `<div class="player-row"><div class="player-avatar" style="opacity:0.2">?</div><div class="player-name-text empty-slot">Empty slot</div></div>`;
+    }
+  }
+
+  // Show start button for host if >= 2 players
+  const startBtn = document.getElementById('start-btn');
+  const readyBtn = document.getElementById('ready-btn');
+  const waitMsg = document.getElementById('wait-msg');
+
+  if (G.isHost) {
+    startBtn.style.display = n >= 2 ? 'block' : 'none';
+    readyBtn.style.display = 'none';
+    waitMsg.textContent = n < 2 ? 'Need at least 2 players to start.' : 'Ready to start!';
+  } else {
+    startBtn.style.display = 'none';
+    readyBtn.style.display = 'block';
+    const me = room.players.find(p => p.id === G.myId);
+    readyBtn.textContent = me && me.ready ? 'Not Ready' : 'Ready';
+    waitMsg.textContent = 'Waiting for host to start the game...';
+  }
+
+  // Transition if game started
+  if (room.phase === 'playing' || room.phase === 'bidding') {
+    stopPolling();
+    hideEl('waiting-room');
+    showEl('game-table', 'flex');
+    G.players = room.players.map(p => p.id);
+    G.playerNames = {};
+    room.players.forEach(p => G.playerNames[p.id] = p.name);
+    loadGameState(room.gameState);
+  }
+}
+
+function toggleReady() {
+  const room = loadRoom(G.roomCode);
+  if (!room) return;
+  const me = room.players.find(p => p.id === G.myId);
+  if (me) {
+    me.ready = !me.ready;
+    saveRoom(room);
+    renderWaitingRoom(room);
+  }
+}
+
+function copyLink() {
+  const link = window.location.href.split('?')[0] + '?room=' + G.roomCode;
+  navigator.clipboard.writeText(link).then(() => toast('Link copied!')).catch(() => toast(link));
+}
+
+function startPolling() {
+  roomPollInterval = setInterval(() => {
+    const room = loadRoom(G.roomCode);
+    if (room) renderWaitingRoom(room);
+  }, 1000);
+}
+
+function stopPolling() {
+  if (roomPollInterval) { clearInterval(roomPollInterval); roomPollInterval = null; }
+}
+
+// ===== GAME SETUP =====
+function startGame() {
+  const room = loadRoom(G.roomCode);
+  if (!room || room.players.length < 2) { toast('Need at least 2 players!'); return; }
+
+  const playerIds = room.players.map(p => p.id);
+  G.players = playerIds;
+  G.playerNames = {};
+  room.players.forEach(p => G.playerNames[p.id] = p.name);
+
+  const schedule = getRoundSchedule(playerIds.length);
+  const scores = {};
+  playerIds.forEach(id => scores[id] = 0);
+
+  const gs = {
+    players: playerIds,
+    playerNames: G.playerNames,
+    schedule,
+    roundIdx: 0,
+    scores,
+    dealerIdx: 0,
+  };
+
+  // Deal first round
+  const roundState = dealRound(gs);
+  gs.roundState = roundState;
+  gs.phase = 'bidding';
+
+  room.phase = 'playing';
+  room.gameState = gs;
+  saveRoom(room);
+
+  hideEl('waiting-room');
+  showEl('game-table', 'flex');
+  loadGameState(gs);
+}
+
+function dealRound(gs) {
+  const numCards = gs.schedule[gs.roundIdx];
+  const deck = shuffle(makeDeck());
+  const hands = {};
+  const players = gs.players;
+  players.forEach(id => hands[id] = []);
+
+  let idx = 0;
+  for (let c = 0; c < numCards; c++) {
+    for (const id of players) {
+      hands[id].push(deck[idx++]);
+    }
+  }
+
+  const trumpCard = deck[idx] || null;
+  const trumpSuit = trumpCard ? trumpCard.suit : null;
+
+  const bids = {};
+  const tricksTaken = {};
+  players.forEach(id => { bids[id] = null; tricksTaken[id] = 0; });
+
+  // Bidding starts left of dealer
+  const bidOrder = [...players.slice(gs.dealerIdx + 1), ...players.slice(0, gs.dealerIdx + 1)];
+
+  return {
+    numCards,
+    deck,
+    hands,
+    trumpCard,
+    trumpSuit,
+    bids,
+    tricksTaken,
+    bidOrder,
+    bidIdx: 0,
+    currentTrick: [],
+    ledSuit: null,
+    trickCount: 0,
+    playOrder: null,
+    playIdx: 0,
+    phase: 'bidding',
+  };
+}
+
+function loadGameState(gs) {
+  G.gs = gs;
+  G.players = gs.players;
+  G.playerNames = gs.playerNames;
+  renderGame();
+}
+
+// Poll for state changes (for non-host players)
+function startGamePolling() {
+  if (!G.isHost) {
+    roomPollInterval = setInterval(() => {
+      const room = loadRoom(G.roomCode);
+      if (room && room.gameState) {
+        // Only reload if state has changed
+        const newGs = JSON.stringify(room.gameState);
+        const curGs = JSON.stringify(G.gs);
+        if (newGs !== curGs) {
+          G.gs = room.gameState;
+          G.players = G.gs.players;
+          G.playerNames = G.gs.playerNames;
+          renderGame();
+        }
+      }
+    }, 500);
+  }
+}
+
+// ===== RENDER =====
+function renderGame() {
+  const gs = G.gs;
+  const rs = gs.roundState;
+  const schedule = gs.schedule;
+  const totalRounds = schedule.length;
+
+  // Score pills
+  const pillsEl = document.getElementById('score-pills');
+  const currentBidder = rs.phase === 'bidding' ? rs.bidOrder[rs.bidIdx] : null;
+  const currentPlayer = rs.phase === 'playing' ? rs.playOrder[rs.playIdx] : null;
+  pillsEl.innerHTML = gs.players.map(id => {
+    const isActive = id === currentBidder || id === currentPlayer;
+    const bid = rs.bids[id];
+    const taken = rs.tricksTaken[id];
+    return `<div class="score-pill ${isActive ? 'active-turn' : ''}">
+      <span class="score-pill-name">${(G.playerNames[id]||'?').slice(0,8)}</span>
+      <span class="score-pill-score">${gs.scores[id]}</span>
+      <span class="score-pill-bid">${bid !== null ? `bid ${bid} / ${taken}` : '—'}</span>
+    </div>`;
+  }).join('');
+
+  // Round info
+  document.getElementById('round-label').textContent = `Round ${gs.roundIdx + 1} of ${totalRounds}`;
+  document.getElementById('cards-label').textContent = `${rs.numCards} card${rs.numCards > 1 ? 's' : ''}`;
+  const trumpEl = document.getElementById('trump-display');
+  if (rs.trumpSuit) {
+    trumpEl.textContent = rs.trumpSuit;
+    trumpEl.style.color = suitColor(rs.trumpSuit);
+  } else {
+    trumpEl.textContent = 'None';
+    trumpEl.style.color = '';
+  }
+
+  // Opponents
+  const oppEl = document.getElementById('opponents-area');
+  const opponents = gs.players.filter(id => id !== G.myId);
+  oppEl.innerHTML = opponents.map(id => {
+    const hand = rs.hands[id] || [];
+    const name = (G.playerNames[id] || '?').slice(0, 12);
+    const bid = rs.bids[id];
+    const taken = rs.tricksTaken[id];
+    const cards = hand.map(() => `<div class="card-back"></div>`).join('');
+    const info = bid !== null ? `bid ${bid}, won ${taken}` : '';
+    return `<div class="opponent-hand">
+      <div class="opponent-name-label">${name} ${info ? `· ${info}` : ''}</div>
+      <div class="opponent-cards">${cards}</div>
+    </div>`;
+  }).join('');
+
+  // Trick area
+  const trickEl = document.getElementById('trick-area');
+  const existingMsg = trickEl.querySelector('.trick-won');
+  trickEl.innerHTML = '<div class="trick-label">Current Trick</div>';
+  const trickWonDiv = document.createElement('div');
+  trickWonDiv.className = 'trick-won';
+  trickWonDiv.id = 'trick-won-msg';
+  trickEl.appendChild(trickWonDiv);
+
+  rs.currentTrick.forEach(entry => {
+    const name = (G.playerNames[entry.playerId] || '?').slice(0,8);
+    trickEl.insertAdjacentHTML('beforeend', cardInTrickHTML(entry.card, name));
+  });
+
+  // My hand
+  const myHand = rs.hands[G.myId] || [];
+  const handEl = document.getElementById('my-hand');
+  const isMyPlay = rs.phase === 'playing' && rs.playOrder && rs.playOrder[rs.playIdx] === G.myId;
+
+  handEl.innerHTML = '';
+  myHand.forEach(card => {
+    const cid = cardId(card);
+    const isSelected = G.selectedCardId === cid;
+    let canPlay = false;
+    if (isMyPlay) {
+      if (rs.ledSuit) {
+        const hasSuit = myHand.some(c => c.suit === rs.ledSuit);
+        canPlay = !hasSuit || card.suit === rs.ledSuit;
+      } else {
+        canPlay = true;
+      }
+    }
+    const classes = isSelected ? 'selected' : (!isMyPlay || !canPlay ? (isMyPlay ? 'unplayable' : '') : '');
+    const color = isRed(card) ? 'red' : 'black';
+    const cardDiv = document.createElement('div');
+    cardDiv.className = `card ${color} ${classes}`;
+    cardDiv.dataset.card = cid;
+    cardDiv.innerHTML = `<div class="card-corner card-corner-top">${card.rank}<br>${card.suit}</div>
+      <div class="card-center">${card.suit}</div>
+      <div class="card-corner card-corner-bottom">${card.rank}<br>${card.suit}</div>`;
+    if (isMyPlay && canPlay) {
+      cardDiv.onclick = () => selectCard(cardDiv, cid);
+    }
+    handEl.appendChild(cardDiv);
+  });
+
+  // My score
+  document.getElementById('my-name-label').textContent = G.playerNames[G.myId] || 'You';
+  document.getElementById('my-score-label').textContent = `Score: ${gs.scores[G.myId] || 0}`;
+
+  // Action panel
+  const actionMsg = document.getElementById('action-msg');
+  const bidUI = document.getElementById('bid-ui');
+  const playHint = document.getElementById('play-hint');
+
+  bidUI.style.display = 'none';
+  playHint.style.display = 'none';
+
+  if (rs.phase === 'bidding') {
+    const bidder = rs.bidOrder[rs.bidIdx];
+    if (bidder === G.myId) {
+      actionMsg.innerHTML = `<strong>Your turn to bid!</strong> How many tricks will you win?`;
+      bidUI.style.display = 'flex';
+      // Enforce: last bidder can't make total = numCards (dealer constraint)
+      const isLastBidder = rs.bidIdx === rs.bidOrder.length - 1;
+      const sumSoFar = Object.values(rs.bids).reduce((a, b) => a + (b || 0), 0);
+      G.bidConstraint = isLastBidder ? rs.numCards - sumSoFar : -1;
+      if (G.currentBid === undefined || G.currentBid === null) G.currentBid = 0;
+      updateBidDisplay();
+    } else {
+      actionMsg.innerHTML = `Waiting for <strong>${G.playerNames[bidder] || '...'}</strong> to bid...`;
+    }
+  } else if (rs.phase === 'playing') {
+    const player = rs.playOrder[rs.playIdx];
+    if (player === G.myId) {
+      actionMsg.innerHTML = `<strong>Your turn!</strong> ${rs.ledSuit ? `You must follow ${rs.ledSuit} if you can.` : 'Lead with any card.'}`;
+      if (G.selectedCardId) playHint.style.display = 'block';
+    } else {
+      actionMsg.innerHTML = `Waiting for <strong>${G.playerNames[player] || '...'}</strong> to play...`;
+    }
+  } else if (rs.phase === 'roundEnd') {
+    actionMsg.innerHTML = `<strong>Round complete!</strong>`;
+    showRoundResults();
+  } else if (rs.phase === 'gameOver') {
+    showFinalResults();
+  }
+
+  // AI moves
+  if (rs.phase === 'bidding' && rs.bidOrder[rs.bidIdx] !== G.myId) {
+    setTimeout(() => aiMakeBid(), 800);
+  }
+  if (rs.phase === 'playing' && rs.playOrder && rs.playOrder[rs.playIdx] !== G.myId) {
+    setTimeout(() => aiPlayCard(), 1000);
+  }
+}
+
+// ===== BIDDING =====
+function updateBidDisplay() {
+  document.getElementById('bid-display').textContent = G.currentBid || 0;
+}
+
+function changeBid(delta) {
+  const rs = G.gs.roundState;
+  let bid = (G.currentBid || 0) + delta;
+  if (bid < 0) bid = 0;
+  if (bid > rs.numCards) bid = rs.numCards;
+  G.currentBid = bid;
+  updateBidDisplay();
+}
+
+function submitBid() {
+  const rs = G.gs.roundState;
+  let bid = G.currentBid || 0;
+  if (G.bidConstraint >= 0 && bid === G.bidConstraint) {
+    toast(`You can't bid ${bid} — that would make the total equal to ${rs.numCards}!`);
+    return;
+  }
+  rs.bids[G.myId] = bid;
+  advanceBid();
+  G.currentBid = 0;
+  saveGameState();
+  renderGame();
+}
+
+function aiMakeBid() {
+  const gs = G.gs;
+  const rs = gs.roundState;
+  if (rs.phase !== 'bidding') return;
+  const bidder = rs.bidOrder[rs.bidIdx];
+  if (bidder === G.myId) return;
+
+  // Simple AI: bid roughly based on hand strength
+  const hand = rs.hands[bidder];
+  let bid = 0;
+  const trump = rs.trumpSuit;
+  hand.forEach(c => {
+    if (c.rank === 'A') bid++;
+    else if (c.rank === 'K' && hand.length >= 4) bid++;
+    else if (c.suit === trump && ['Q','K','A'].includes(c.rank)) bid++;
+  });
+  bid = Math.min(bid, rs.numCards);
+
+  // Dealer constraint
+  const isLastBidder = rs.bidIdx === rs.bidOrder.length - 1;
+  if (isLastBidder) {
+    const sumSoFar = Object.values(rs.bids).reduce((a, b) => a + (b || 0), 0);
+    const forbidden = rs.numCards - sumSoFar;
+    if (bid === forbidden) bid = bid === 0 ? 1 : bid - 1;
+    if (bid < 0) bid = 0;
+  }
+
+  rs.bids[bidder] = bid;
+  advanceBid();
+  saveGameState();
+  renderGame();
+}
+
+function advanceBid() {
+  const rs = G.gs.roundState;
+  rs.bidIdx++;
+  if (rs.bidIdx >= rs.bidOrder.length) {
+    // All bids in, start playing
+    rs.phase = 'playing';
+    // Play starts left of dealer
+    const gs = G.gs;
+    rs.playOrder = [...gs.players.slice(gs.dealerIdx + 1), ...gs.players.slice(0, gs.dealerIdx + 1)];
+    rs.playIdx = 0;
+    rs.ledSuit = null;
+  }
+}
+
+// ===== PLAYING =====
+function selectCard(el, cid) {
+  if (G.gs.roundState.phase !== 'playing') return;
+  const rs = G.gs.roundState;
+  if (rs.playOrder[rs.playIdx] !== G.myId) return;
+
+  // Check if must follow suit
+  const myHand = rs.hands[G.myId];
+  const card = myHand.find(c => cardId(c) === cid);
+  if (!card) return;
+
+  if (rs.ledSuit) {
+    const hasSuit = myHand.some(c => c.suit === rs.ledSuit);
+    if (hasSuit && card.suit !== rs.ledSuit) {
+      toast(`You must follow suit (${rs.ledSuit})!`);
+      return;
+    }
+  }
+
+  G.selectedCardId = cid;
+  renderGame();
+}
+
+function playSelectedCard() {
+  if (!G.selectedCardId) return;
+  const rs = G.gs.roundState;
+  if (rs.playOrder[rs.playIdx] !== G.myId) return;
+
+  const myHand = rs.hands[G.myId];
+  const cardIdx = myHand.findIndex(c => cardId(c) === G.selectedCardId);
+  if (cardIdx < 0) return;
+  const card = myHand.splice(cardIdx, 1)[0];
+  rs.hands[G.myId] = myHand;
+
+  if (!rs.ledSuit) rs.ledSuit = card.suit;
+  rs.currentTrick.push({playerId: G.myId, card});
+
+  G.selectedCardId = null;
+  advancePlay();
+  saveGameState();
+  renderGame();
+}
+
+function aiPlayCard() {
+  const gs = G.gs;
+  const rs = gs.roundState;
+  if (rs.phase !== 'playing') return;
+  const player = rs.playOrder[rs.playIdx];
+  if (player === G.myId) return;
+
+  const hand = rs.hands[player];
+  if (!hand || hand.length === 0) return;
+
+  let card;
+  if (rs.ledSuit) {
+    const following = hand.filter(c => c.suit === rs.ledSuit);
+    if (following.length > 0) {
+      // Simple AI: play highest following card if we think we can win, else lowest
+      card = following.sort((a, b) => RANK_VAL[b.rank] - RANK_VAL[a.rank])[0];
+    } else {
+      // Can't follow — trump if possible, else throw lowest
+      const trumps = hand.filter(c => c.suit === rs.trumpSuit);
+      card = trumps.length > 0
+        ? trumps.sort((a, b) => RANK_VAL[a.rank] - RANK_VAL[b.rank])[0]
+        : hand.sort((a, b) => RANK_VAL[a.rank] - RANK_VAL[b.rank])[0];
+    }
+  } else {
+    // Leading: play highest trump or highest card
+    const trumps = hand.filter(c => c.suit === rs.trumpSuit);
+    card = trumps.length > 0
+      ? trumps.sort((a, b) => RANK_VAL[b.rank] - RANK_VAL[a.rank])[0]
+      : hand.sort((a, b) => RANK_VAL[b.rank] - RANK_VAL[a.rank])[0];
+  }
+
+  const cardIdx = hand.findIndex(c => cardId(c) === cardId(card));
+  hand.splice(cardIdx, 1);
+  rs.hands[player] = hand;
+  if (!rs.ledSuit) rs.ledSuit = card.suit;
+  rs.currentTrick.push({playerId: player, card});
+
+  advancePlay();
+  saveGameState();
+  renderGame();
+}
+
+function advancePlay() {
+  const gs = G.gs;
+  const rs = gs.roundState;
+  rs.playIdx++;
+
+  if (rs.playIdx >= gs.players.length) {
+    // Trick complete
+    const winnerId = trickWinner(rs.currentTrick, rs.trumpSuit, rs.ledSuit);
+    rs.tricksTaken[winnerId] = (rs.tricksTaken[winnerId] || 0) + 1;
+    rs.trickCount++;
+
+    const winnerName = G.playerNames[winnerId] || '?';
+    showTrickWon(winnerName, rs.currentTrick);
+
+    setTimeout(() => {
+      rs.currentTrick = [];
+      rs.ledSuit = null;
+
+      // Next trick: winner leads
+      const winnerIdx = gs.players.indexOf(winnerId);
+      rs.playOrder = [...gs.players.slice(winnerIdx), ...gs.players.slice(0, winnerIdx)];
+      rs.playIdx = 0;
+
+      if (rs.trickCount >= rs.numCards) {
+        // Round over — score
+        scoreRound();
+        return;
+      }
+      saveGameState();
+      renderGame();
+    }, 1200);
+  }
+}
+
+function showTrickWon(name, trick) {
+  const el = document.getElementById('trick-won-msg');
+  el.textContent = `${name} wins!`;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1000);
+}
+
+// ===== SCORING =====
+function scoreRound() {
+  const gs = G.gs;
+  const rs = gs.roundState;
+
+  gs.players.forEach(id => {
+    const bid = rs.bids[id];
+    const taken = rs.tricksTaken[id];
+    let pts;
+    if (taken === bid) pts = 10 + bid;
+    else pts = taken; // 1 per trick taken, no bonus
+    gs.scores[id] = (gs.scores[id] || 0) + pts;
+  });
+
+  rs.phase = 'roundEnd';
+  gs.roundState = rs;
+  saveGameState();
+  renderGame();
+}
+
+function showRoundResults() {
+  const gs = G.gs;
+  const rs = gs.roundState;
+
+  document.getElementById('modal-title').textContent = `Round ${gs.roundIdx + 1} Results`;
+
+  const tbody = document.getElementById('round-results-body');
+  tbody.innerHTML = gs.players.map(id => {
+    const bid = rs.bids[id];
+    const taken = rs.tricksTaken[id];
+    const made = taken === bid;
+    const roundPts = made ? 10 + bid : taken;
+    return `<tr>
+      <td>${G.playerNames[id]}</td>
+      <td>${bid}</td>
+      <td>${taken} ${made ? '✓' : '✗'}</td>
+      <td style="color:${made ? '#56d364' : '#f85149'}">+${roundPts}</td>
+      <td>${gs.scores[id]}</td>
+    </tr>`;
+  }).join('');
+
+  const isLastRound = gs.roundIdx >= gs.schedule.length - 1;
+  document.getElementById('modal-next-btn').textContent = isLastRound ? 'Final Scores' : 'Next Round';
+
+  document.getElementById('round-result-modal').classList.add('show');
+}
+
+function nextRound() {
+  document.getElementById('round-result-modal').classList.remove('show');
+  const gs = G.gs;
+
+  if (gs.roundIdx >= gs.schedule.length - 1) {
+    gs.roundState.phase = 'gameOver';
+    saveGameState();
+    showFinalResults();
+    return;
+  }
+
+  gs.roundIdx++;
+  gs.dealerIdx = (gs.dealerIdx + 1) % gs.players.length;
+  G.currentBid = 0;
+  G.selectedCardId = null;
+
+  const rs = dealRound(gs);
+  gs.roundState = rs;
+  gs.phase = 'playing'; // or bidding
+
+  saveGameState();
+  renderGame();
+}
+
+function showFinalResults() {
+  const gs = G.gs;
+  const sorted = [...gs.players].sort((a, b) => gs.scores[b] - gs.scores[a]);
+
+  const tbody = document.getElementById('final-results-body');
+  tbody.innerHTML = sorted.map((id, i) => `<tr class="${i === 0 ? 'winner-row' : ''}">
+    <td>${i === 0 ? '🏆 1st' : `${i+1}th`}</td>
+    <td>${G.playerNames[id]}</td>
+    <td style="font-family:'Playfair Display',serif; font-size:1.1rem">${gs.scores[id]}</td>
+  </tr>`).join('');
+
+  document.getElementById('final-modal').classList.add('show');
+}
+
+function showScores() {
+  const gs = G.gs;
+  if (!gs) return;
+  showRoundResults();
+}
+
+function saveGameState() {
+  const room = loadRoom(G.roomCode);
+  if (room) {
+    room.gameState = G.gs;
+    saveRoom(room);
+  }
+}
+
+// ===== INIT =====
+// Check for room code in URL
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const roomCode = params.get('room');
+  if (roomCode) {
+    document.getElementById('join-code').value = roomCode;
+    toast(`Joining room ${roomCode}...`);
+  }
+
+  // Check if we're already in a game (tab reloaded)
+  const room = roomCode ? loadRoom(roomCode) : null;
+  if (room && room.phase !== 'waiting') {
+    const myId = myTabId();
+    const inRoom = room.players.find(p => p.id === myId);
+    if (inRoom && room.gameState) {
+      G.myId = myId;
+      G.myName = inRoom.name;
+      G.roomCode = roomCode;
+      G.isHost = room.host === myId;
+      G.players = room.players.map(p => p.id);
+      G.playerNames = {};
+      room.players.forEach(p => G.playerNames[p.id] = p.name);
+      hideEl('lobby');
+      showEl('game-table', 'flex');
+      loadGameState(room.gameState);
+      startGamePolling();
+    }
+  }
+});
+
+// Auto-start polling for non-host once in game
+const origStartGame = startGame;
+window.startGame = function() {
+  origStartGame();
+  startGamePolling();
+};
+</script>
+</body>
+</html>
