@@ -10,7 +10,7 @@
      SETUP INSTRUCTIONS
      ============================================================
      1. Go to https://console.firebase.google.com
-     2. Click "Add project", give it a name, click through 
+     2. Click "Add project", give it a name, click through
      3. On the project dashboard, click the </> (Web) icon
      4. Register app (any nickname), skip Firebase Hosting for now
      5. Copy the firebaseConfig object shown and PASTE it below,
@@ -773,7 +773,8 @@ function buildRoundState(initGs) {
   for (let c=0;c<numCards;c++) for (const id of players) hands[id].push(deck[idx++]);
   const trumpCard = deck[idx] || null;
   const trumpSuit = trumpCard ? trumpCard.suit : null;
-  const bids        = Object.fromEntries(players.map(id => [id, null]));
+  // Firebase silently drops null values, so use -1 to mean "not yet bid"
+  const bids        = Object.fromEntries(players.map(id => [id, -1]));
   const tricksTaken = Object.fromEntries(players.map(id => [id, 0]));
   const bidOrder = [...players.slice(dealerIdx+1), ...players.slice(0, dealerIdx+1)];
   // encode hands so Firebase doesn't choke on suit symbols
@@ -810,6 +811,11 @@ function listenGame() {
 function renderGame() {
   if (!gs) return;
   const rs = gs.roundState;
+  // Firebase converts arrays to objects — convert back
+  if (rs.bidOrder && !Array.isArray(rs.bidOrder)) rs.bidOrder = Object.values(rs.bidOrder);
+  if (rs.playOrder && !Array.isArray(rs.playOrder)) rs.playOrder = Object.values(rs.playOrder);
+  if (gs.players && !Array.isArray(gs.players)) gs.players = Object.values(gs.players);
+  if (gs.schedule && !Array.isArray(gs.schedule)) gs.schedule = Object.values(gs.schedule);
   const schedule = gs.schedule;
 
   // score pills
@@ -819,12 +825,12 @@ function renderGame() {
   pillsEl.innerHTML = gs.players.map(id => {
     const isMe = id === MY_ID;
     const isActive = id===activeBidder || id===activePlayer;
-    const bid = rs.bids[id];
-    const taken = rs.tricksTaken[id];
+    const bid = rs.bids ? rs.bids[id] : -1;
+    const taken = rs.tricksTaken ? (rs.tricksTaken[id] || 0) : 0;
     return `<div class="s-pill ${isMe?'me':''} ${isActive?'active':''}">
       <span class="s-pill-name">${(gs.playerNames[id]||'?').slice(0,9)}</span>
       <span class="s-pill-pts">${gs.scores[id]||0}</span>
-      <span class="s-pill-bid">${bid!=null ? `${bid}/${taken}`:''}</span>
+      <span class="s-pill-bid">${bid >= 0 ? `${bid}/${taken}` : ''}</span>
     </div>`;
   }).join('');
 
@@ -840,9 +846,9 @@ function renderGame() {
   oppEl.innerHTML = gs.players.filter(id=>id!==MY_ID).map(id => {
     const hand = decHand(rs.handsEnc?.[id] || '');
     const name = (gs.playerNames[id]||'?').slice(0,12);
-    const bid  = rs.bids[id];
-    const taken = rs.tricksTaken[id];
-    const info = bid!=null ? `bid ${bid} · won ${taken}` : '';
+    const bid  = rs.bids ? rs.bids[id] : -1;
+    const taken = rs.tricksTaken ? (rs.tricksTaken[id] || 0) : 0;
+    const info = bid >= 0 ? `bid ${bid} · won ${taken}` : '';
     const backs = hand.map(()=>`<div class="card-back"></div>`).join('');
     return `<div class="opp-block">
       <div class="opp-label">${name}${info?`<br><small>${info}</small>`:''}</div>
@@ -955,7 +961,7 @@ window.changeBid = function(d) {
 window.submitBid = async function() {
   const rs = gs.roundState;
   const bid = currentBid || 0;
-  const newBids = { ...rs.bids, [MY_ID]: bid };
+  const newBids = { ...(rs.bids||{}), [MY_ID]: bid };
   const newRs   = advanceBidState({ ...rs, bids: newBids });
   // Use set() — update() with nested objects flattens and corrupts them
   await dbSet(`rooms/${ROOM_CODE}/gameState`, { ...gs, roundState: newRs });
@@ -1009,7 +1015,7 @@ window.playSelected = async function() {
 
 async function resolveTrick(rs) {
   const winner = trickWinner(rs.currentTrick, rs.trumpSuit, rs.ledSuit);
-  const newTricksTaken = { ...rs.tricksTaken, [winner]: (rs.tricksTaken[winner]||0) + 1 };
+  const newTricksTaken = { ...(rs.tricksTaken||{}), [winner]: ((rs.tricksTaken&&rs.tricksTaken[winner])||0) + 1 };
   const newTrickCount  = rs.trickCount + 1;
 
   // flash
@@ -1038,8 +1044,8 @@ async function resolveTrick(rs) {
 function scoreRound(rs) {
   const scores = { ...gs.scores };
   gs.players.forEach(id => {
-    const bid   = rs.bids[id] || 0;
-    const taken = rs.tricksTaken[id] || 0;
+    const bid   = (rs.bids && rs.bids[id] >= 0) ? rs.bids[id] : 0;
+    const taken = (rs.tricksTaken && rs.tricksTaken[id]) || 0;
     scores[id] = (scores[id]||0) + (taken===bid ? 10+bid : taken);
   });
 
@@ -1062,8 +1068,8 @@ window.showRoundModal = function() {
   document.getElementById('mr-title').textContent = `Round ${gs.roundIdx+1} Results`;
   const tbody = document.getElementById('mr-body');
   tbody.innerHTML = gs.players.map(id => {
-    const bid   = rs.bids[id] || 0;
-    const taken = rs.tricksTaken[id] || 0;
+    const bid   = (rs.bids && rs.bids[id] >= 0) ? rs.bids[id] : 0;
+    const taken = (rs.tricksTaken && rs.tricksTaken[id]) || 0;
     const made  = taken === bid;
     const rPts  = made ? 10+bid : taken;
     const isMe  = id === MY_ID;
