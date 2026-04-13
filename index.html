@@ -521,8 +521,15 @@ if (!configured) document.getElementById('config-warn').classList.add('show');
 
 let app, db;
 if (configured) {
-  app = initializeApp(cfg);
-  db  = getDatabase(app);
+  try {
+    app = initializeApp(cfg);
+    db  = getDatabase(app);
+    console.log('Firebase initialised OK, databaseURL:', cfg.databaseURL);
+  } catch(e) {
+    console.error('Firebase init error:', e);
+    document.getElementById('config-warn').textContent = 'Firebase init failed: ' + e.message;
+    document.getElementById('config-warn').classList.add('show');
+  }
 }
 
 // ── helpers ──
@@ -533,10 +540,10 @@ async function dbUpdate(path, val) { return update(dbRef(path), val); }
 let activeListeners = [];
 function listen(path, cb) {
   const r = dbRef(path);
-  onValue(r, snap => cb(snap.val()));
-  activeListeners.push(r);
+  const unsub = onValue(r, snap => cb(snap.val()));
+  activeListeners.push(unsub);
 }
-function stopListeners() { activeListeners.forEach(r => off(r)); activeListeners = []; }
+function stopListeners() { activeListeners.forEach(unsub => unsub()); activeListeners = []; }
 
 // ── state ──
 let MY_ID = sessionStorage.getItem('ohHell_myId') || (() => {
@@ -656,10 +663,12 @@ window.copyInvite = function() {
 function listenWaiting() {
   listen(`rooms/${ROOM_CODE}`, room => {
     if (!room) return;
-    renderWaiting(room);
     if (room.phase === 'playing' || room.phase === 'bidding') {
       stopListeners();
+      if (!room.gameState) { toast('Waiting for game data…'); return; }
       enterGame(room.gameState);
+    } else {
+      renderWaiting(room);
     }
   });
 }
@@ -716,30 +725,37 @@ window.toggleReady = async function() {
 
 // ── START GAME (host only) ──
 window.startGame = async function() {
-  const room = await dbGet(`rooms/${ROOM_CODE}`);
-  if (!room) return;
-  const players = Object.entries(room.players||{}).sort((a,b)=>a[1].order-b[1].order);
-  if (players.length < 2) { toast('Need at least 2 players!'); return; }
+  toast('Starting game…');
+  try {
+    const room = await dbGet(`rooms/${ROOM_CODE}`);
+    if (!room) { toast('Error: room not found!'); return; }
+    const players = Object.entries(room.players||{}).sort((a,b)=>a[1].order-b[1].order);
+    if (players.length < 2) { toast('Need at least 2 players!'); return; }
 
-  const playerIds   = players.map(([id]) => id);
-  const playerNames = Object.fromEntries(players.map(([id,p]) => [id,p.name]));
-  const schedule    = getRoundSchedule(playerIds.length);
-  const scores      = Object.fromEntries(playerIds.map(id => [id,0]));
+    const playerIds   = players.map(([id]) => id);
+    const playerNames = Object.fromEntries(players.map(([id,p]) => [id,p.name]));
+    const schedule    = getRoundSchedule(playerIds.length);
+    const scores      = Object.fromEntries(playerIds.map(id => [id,0]));
 
-  const initGs = {
-    players: playerIds,
-    playerNames,
-    schedule,
-    roundIdx: 0,
-    scores,
-    dealerIdx: 0,
-  };
+    const initGs = {
+      players: playerIds,
+      playerNames,
+      schedule,
+      roundIdx: 0,
+      scores,
+      dealerIdx: 0,
+    };
 
-  const rs = buildRoundState(initGs);
-  initGs.roundState = rs;
+    const rs = buildRoundState(initGs);
+    initGs.roundState = rs;
 
-  await dbSet(`rooms/${ROOM_CODE}/gameState`, initGs);
-  await dbUpdate(`rooms/${ROOM_CODE}`, { phase: 'playing' });
+    await dbSet(`rooms/${ROOM_CODE}/gameState`, initGs);
+    await dbUpdate(`rooms/${ROOM_CODE}`, { phase: 'playing' });
+    toast('Game started!');
+  } catch(e) {
+    toast('Error starting game: ' + e.message);
+    console.error('startGame error:', e);
+  }
 };
 
 // ── BUILD ROUND STATE ──
