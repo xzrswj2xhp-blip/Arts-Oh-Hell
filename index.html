@@ -596,10 +596,14 @@ function getRoundSchedule(numPlayers) {
   return [...up,...dn];
 }
 
-// ── encode/decode hands (Firebase key-safe) ──
-// Firebase keys can't have . # $ [ ] so we base64 the hand arrays
-function encHand(cards) { return btoa(JSON.stringify(cards)); }
-function decHand(s) { try { return JSON.parse(atob(s)); } catch { return []; } }
+// ── encode/decode hands (Firebase key-safe, Unicode-safe) ──
+// btoa() chokes on Unicode suit symbols (♠♥♦♣), so we use encodeURIComponent first
+function encHand(cards) {
+  return btoa(encodeURIComponent(JSON.stringify(cards)));
+}
+function decHand(s) {
+  try { return JSON.parse(decodeURIComponent(atob(s))); } catch { return []; }
+}
 
 // ── LOBBY: host ──
 window.hostGame = async function() {
