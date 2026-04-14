@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -212,12 +212,12 @@ input[type=text]:focus { border-color: var(--gold); }
 .top-bar-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); margin-right: .3rem; white-space: nowrap; }
 .score-pills { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
 
-.s-pill { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 7px; padding: 3px 10px; min-width: 64px; }
+.s-pill { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 7px; padding: 5px 14px; min-width: 80px; }
 .s-pill.me { border-color: rgba(201,168,76,.5); background: rgba(201,168,76,.07); }
 .s-pill.active { border-color: var(--gold); background: rgba(201,168,76,.15); }
-.s-pill-name { font-size: .62rem; color: rgba(255,255,255,.55); white-space: nowrap; }
-.s-pill-pts { font-size: 1rem; font-weight: 500; }
-.s-pill-bid { font-size: .6rem; color: var(--gold-light); min-height: .75rem; }
+.s-pill-name { font-size: .78rem; color: rgba(255,255,255,.65); white-space: nowrap; }
+.s-pill-pts { font-size: 1.2rem; font-weight: 500; }
+.s-pill-bid { font-size: .72rem; color: var(--gold-light); min-height: .9rem; }
 
 .round-bar {
   background: rgba(0,0,0,.18);
@@ -431,7 +431,7 @@ input[type=text]:focus { border-color: var(--gold); }
       <span>·</span>
       <span id="g-cards-label">1 card</span>
       <span>·</span>
-      <span>Obama: <span id="g-trump" class="trump-badge">?</span></span>
+      <span>Obama suit: <span id="g-trump" class="trump-badge">?</span></span>
     </div>
   </div>
 
@@ -931,6 +931,13 @@ function renderGame() {
     } else {
       actionText.innerHTML = `Waiting for <strong>${gs.playerNames[player]||'...'}</strong> to play…`;
     }
+  } else if (rs.phase === 'trickComplete') {
+    const winnerName = gs.playerNames[rs.trickWinner] || '?';
+    actionText.innerHTML = `<strong>${winnerName}</strong> wins the trick!`;
+    if (rs.trickWinner === MY_ID) {
+      playUI.style.display = 'block';
+      playUI.innerHTML = '<button class="btn-confirm" onclick="nextTrick()">Next Trick →</button>';
+    }
   } else if (rs.phase === 'roundEnd') {
     // Only open if not already open
     if (!document.getElementById('modal-round').classList.contains('show')) {
@@ -1023,28 +1030,39 @@ async function resolveTrick(rs) {
   const newTricksTaken = { ...(rs.tricksTaken||{}), [winner]: ((rs.tricksTaken&&rs.tricksTaken[winner])||0) + 1 };
   const newTrickCount  = rs.trickCount + 1;
 
-  // flash
-  flashWinner(gs.playerNames[winner] || '?');
-
-  // new play order: winner leads
+  // new play order: winner leads next trick
   const winIdx = gs.players.indexOf(winner);
   const newPlayOrder = [...gs.players.slice(winIdx), ...gs.players.slice(0,winIdx)];
 
-  const partial = {
+  // Stay in trickComplete phase — cards remain visible, winner clicks to continue
+  return {
     ...rs,
     tricksTaken: newTricksTaken,
     trickCount: newTrickCount,
+    trickWinner: winner,
+    pendingPlayOrder: newPlayOrder,
+    phase: 'trickComplete',
+  };
+}
+
+// Called when the trick winner clicks "Next Trick"
+window.nextTrick = async function() {
+  const rs = gs.roundState;
+  if (rs.phase !== 'trickComplete') return;
+  if (rs.trickWinner !== MY_ID) return;
+
+  const base = {
+    ...rs,
     currentTrick: [],
     ledSuit: null,
-    playOrder: newPlayOrder,
+    playOrder: rs.pendingPlayOrder,
     playIdx: 0,
+    phase: 'playing',
   };
 
-  if (newTrickCount >= rs.numCards) {
-    return scoreRound(partial);
-  }
-  return partial;
-}
+  const next = rs.trickCount >= rs.numCards ? scoreRound(base) : base;
+  await dbSet(`rooms/${ROOM_CODE}/gameState`, { ...gs, roundState: next });
+};
 
 function scoreRound(rs) {
   const scores = { ...gs.scores };
@@ -1060,10 +1078,7 @@ function scoreRound(rs) {
 }
 
 function flashWinner(name) {
-  const el = document.getElementById('trick-flash');
-  el.textContent = `${name} wins!`;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 1100);
+  // No longer used — winner is shown persistently in trickComplete phase
 }
 
 // ── ROUND RESULTS ──
